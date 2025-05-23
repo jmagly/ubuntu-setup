@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# security-scan - Run all security tools with a single command
+# Creates log files in /var/log/security-scans/
+
+# Create timestamp and log directory
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+LOG_DIR="/var/log/security-scans"
+LOG_FILE="$LOG_DIR/security-scan-$TIMESTAMP.log"
+
+if [ "$EUID" -ne 0 ]; then
+    echo "This script must be run with sudo or as root."
+    exit 1
+fi
+
+# Create log directory if needed
+mkdir -p "$LOG_DIR"
+chmod 750 "$LOG_DIR"
+
+echo "========================================================"
+echo "      COMPREHENSIVE SYSTEM SECURITY SCAN"
+echo "      $(date)"
+echo "========================================================"
+echo "Running all security tools. This may take several minutes."
+echo "Full logs will be saved to: $LOG_FILE"
+echo "========================================================" 
+
+# Start logging to file
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+# UFW Status
+echo -e "\n\n=== UFW FIREWALL STATUS ==="
+ufw status verbose
+
+# Fail2Ban Banned IPs with Geolocation
+echo -e "\n\n=== FAIL2BAN BANNED IP ANALYSIS ==="
+echo "All banned IPs with geolocation data:"
+if command -v f2b-geoban.sh >/dev/null 2>&1; then
+    /usr/local/bin/f2b-geoban.sh --all
+else
+    echo "f2b-geoban.sh not found. Skipping Fail2Ban IP analysis."
+fi
+
+# RKHunter
+echo -e "\n\n=== ROOTKIT HUNTER SCAN ==="
+rkhunter --check --skip-keypress
+
+# AIDE Check
+echo -e "\n\n=== AIDE FILE INTEGRITY CHECK ==="
+aide --config=/etc/aide/aide.conf --check
+
+# Auditd Reports
+echo -e "\n\n=== AUDITD RECENT SECURITY EVENTS ==="
+echo "Recent authentication events:"
+ausearch -ts today -k auth 2>/dev/null || echo "No auth events found"
+echo -e "\nRecent changes to important files:"
+ausearch -ts today -k identity 2>/dev/null || echo "No identity events found"
+
+# Lynis Audit
+echo -e "\n\n=== LYNIS SECURITY AUDIT ==="
+lynis audit system
+
+echo -e "\n\n========================================================"
+echo "      SECURITY SCAN COMPLETE"
+echo "      Full log saved to: $LOG_FILE"
+echo "========================================================"
