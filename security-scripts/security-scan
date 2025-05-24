@@ -28,18 +28,24 @@ echo "========================================================"
 # Start logging to file
 exec > >(tee -a "$LOG_FILE") 2>&1
 
+# Hardening Check
+echo -e "\n\n=== HARDENING CHECK ==="
+/usr/local/bin/security-hardening-check.sh
+
 # UFW Status
 echo -e "\n\n=== UFW FIREWALL STATUS ==="
 ufw status verbose
 
 # Fail2Ban Banned IPs with Geolocation
 echo -e "\n\n=== FAIL2BAN BANNED IP ANALYSIS ==="
-echo "All banned IPs with geolocation data:"
-if command -v f2b-geoban.sh >/dev/null 2>&1; then
-    /usr/local/bin/f2b-geoban.sh --all
-else
-    echo "f2b-geoban.sh not found. Skipping Fail2Ban IP analysis."
-fi
+echo "\n\n=== INTRUSION ATTEMPTS ==="
+/usr/local/bin/f2b-report-module.sh text
+
+
+# ClamAV
+echo -e "\n\n=== CLAMAV STATUS ==="
+/usr/local/bin/clamav-status-detailed.sh
+/usr/local/bin/security-report-clamav.sh
 
 # RKHunter
 echo -e "\n\n=== ROOTKIT HUNTER SCAN ==="
