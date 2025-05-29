@@ -1,0 +1,31 @@
+# This file contains the auditctl rules that are loaded
+# whenever the audit daemon is started via the initscripts.
+# The rules are simply the parameters that would be passed
+# to auditctl.
+
+# First rule - delete all
+-D
+
+# Buffer Size
+-b 8192
+
+# Failure Mode
+-f 1
+
+# Monitor file system, mount, and umount2 syscalls
+-a always,exit -F arch=b64 -S mount -S umount2 -F auid>=1000 -F auid!=4294967295 -k mount
+
+# Monitor successful file operations
+-a always,exit -F arch=b64 -S open -S openat -S creat -S truncate -S ftruncate -F exit=0 -F auid>=1000 -F auid!=4294967295 -k file-access
+
+# Monitor successful file modifications
+-a always,exit -F arch=b64 -S write -S pwrite64 -F exit=0 -F auid>=1000 -F auid!=4294967295 -k file-modify
+
+# Monitor successful file deletions
+-a always,exit -F arch=b64 -S unlink -S unlinkat -S rename -S renameat -F exit=0 -F auid>=1000 -F auid!=4294967295 -k file-delete
+
+# Monitor successful process executions
+-a always,exit -F arch=b64 -S execve -F exit=0 -F auid>=1000 -F auid!=4294967295 -k process-exec
+
+# Monitor successful user/group modifications
+-a always,exit -F arch=b64 -S chown -S fchown -S fchownat -S lchown -F exit=0 -F auid>=1000 -F auid!=4294967295 -k user-modify
