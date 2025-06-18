@@ -1,0 +1,43 @@
+[DEFAULT]
+# Ban hosts for 24 hours
+bantime = 86400
+# Retry window of 10 minutes
+findtime = 600
+# Allow 3 retries before banning
+maxretry = 3
+# Ban both IPv4 and IPv6
+banaction = iptables-multiport
+# Send email notifications
+destemail = root@localhost
+sender = fail2ban@localhost
+action = %(action_mwl)s
+
+# SSH protection
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 3
+findtime = 300
+bantime = 3600
+
+# Protect against repeated failed login attempts
+[sshd-ddos]
+enabled = true
+port = ssh
+filter = sshd-ddos
+logpath = /var/log/auth.log
+maxretry = 2
+findtime = 300
+bantime = 3600
+
+# Protect against brute force attacks
+[sshd-strong]
+enabled = true
+port = ssh
+filter = sshd-strong
+logpath = /var/log/auth.log
+maxretry = 1
+findtime = 300
+bantime = 86400 
