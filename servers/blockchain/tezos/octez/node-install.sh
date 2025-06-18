@@ -92,6 +92,48 @@ check_docker() {
     print_message "Tezos Docker image pulled successfully."
 }
 
+# Function to get the user ID of the tezos user inside the Docker container
+get_docker_user_id() {
+    docker run --rm tezos/tezos-bare:latest id -u tezos
+}
+
+# Function to get the group ID of the tezos user inside the Docker container
+get_docker_group_id() {
+    docker run --rm tezos/tezos-bare:latest id -g tezos
+}
+
+# Function to set directory permissions
+set_directory_permissions() {
+    local dir=$1
+    local uid=$(get_docker_user_id)
+    local gid=$(get_docker_group_id)
+    
+    print_message "Setting proper permissions for data directory..."
+    print_message "Docker tezos user has UID:GID = $uid:$gid"
+    
+    # Method 1: Try to change ownership if running as root or with sudo
+    if [ $(id -u) -eq 0 ]; then
+        chown -R $uid:$gid "$dir"
+        print_message "Changed ownership of $dir to $uid:$gid"
+        return 0
+    fi
+    
+    # Method 2: Make the directory world-writable (less secure but works for testing)
+    chmod 777 "$dir"
+    print_message "Made $dir world-writable (777 permissions)"
+    
+    # Check if we have write permissions
+    if touch "$dir/test_write_permission" 2>/dev/null; then
+        rm "$dir/test_write_permission"
+        return 0
+    else
+        print_error "Could not set sufficient permissions for $dir"
+        print_error "Please run this script with sudo or manually set permissions:"
+        print_error "sudo chown -R $uid:$gid \"$dir\" or sudo chmod 777 \"$dir\""
+        return 1
+    fi
+}
+
 # Function to get the latest snapshot URL for the selected network and mode
 get_snapshot_url() {
     local network=$1
@@ -99,7 +141,7 @@ get_snapshot_url() {
     
     # Try multiple snapshot sources in case one fails
     local snapshot_sources=(
-        "https://snapshots.tzinit.org/"
+        " https://snapshots.tzinit.org/"
         "https://snapshots.tezos.marigold.dev"  # Marigold
         "https://snapshots.tzkt.io"            # TzKT
         "https://mainnet.xtz-shots.io"         # XTZ-Shots
@@ -206,23 +248,7 @@ get_snapshot_url() {
     exit 1
 }
 
-# Function to display a spinner while waiting
-spinner() {
-    local pid=$1
-    local delay=0.1
-    local spinstr='|/-\'
-    
-    while ps -p $pid > /dev/null; do
-        local temp=${spinstr#?}
-        printf " [%c]  " "$spinstr"
-        local spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
-        printf "\b\b\b\b\b\b"
-    done
-    printf "    \b\b\b\b"
-}
-
-# Function to convert bytes to human-readable format
+# Function to human readable size
 human_readable_size() {
     local bytes=$1
     if [ $bytes -lt 1024 ]; then
@@ -301,28 +327,38 @@ main() {
     print_message "Data directory: ${BOLD}${DATA_DIR}${NC}"
     
     # Check for disk space
-    AVAILABLE_SPACE=$(df -B1 --output=avail "$(dirname "$DATA_DIR")" | tail -n 1)
-    
-    REQUIRED_SPACE=0
-    case $HISTORY_MODE in
-        "rolling") REQUIRED_SPACE=15000000000 ;; # 15GB
-        "full") REQUIRED_SPACE=60000000000 ;; # 60GB
-        "archive") REQUIRED_SPACE=550000000000 ;; # 550GB
-    esac
-    
-    if [ $AVAILABLE_SPACE -lt $REQUIRED_SPACE ]; then
-        REQUIRED_HR=$(human_readable_size $REQUIRED_SPACE)
-        AVAILABLE_HR=$(human_readable_size $AVAILABLE_SPACE)
-        print_warning "Insufficient disk space for ${HISTORY_MODE} mode."
-        print_warning "Required: ${REQUIRED_HR}, Available: ${AVAILABLE_HR}"
-        read -p "Do you want to continue anyway? (y/N): " continue_choice
-        if [[ ! $continue_choice =~ ^[Yy]$ ]]; then
-            print_message "Operation cancelled by the user."
-            exit 0
+    available_space_check() {
+        local dir_to_check=$(dirname "$DATA_DIR")
+        if [ -d "$dir_to_check" ]; then
+            AVAILABLE_SPACE=$(df -B1 --output=avail "$dir_to_check" | tail -n 1)
+            
+            REQUIRED_SPACE=0
+            case $HISTORY_MODE in
+                "rolling") REQUIRED_SPACE=15000000000 ;; # 15GB
+                "full") REQUIRED_SPACE=60000000000 ;; # 60GB
+                "archive") REQUIRED_SPACE=550000000000 ;; # 550GB
+            esac
+            
+            if [ $AVAILABLE_SPACE -lt $REQUIRED_SPACE ]; then
+                REQUIRED_HR=$(human_readable_size $REQUIRED_SPACE)
+                AVAILABLE_HR=$(human_readable_size $AVAILABLE_SPACE)
+                print_warning "Insufficient disk space for ${HISTORY_MODE} mode."
+                print_warning "Required: ${REQUIRED_HR}, Available: ${AVAILABLE_HR}"
+                read -p "Do you want to continue anyway? (y/N): " continue_choice
+                if [[ ! $continue_choice =~ ^[Yy]$ ]]; then
+                    print_message "Operation cancelled by the user."
+                    exit 0
+                fi
+            fi
+        else
+            print_warning "Cannot check available space for non-existent directory path."
+            print_warning "Please ensure you have enough disk space for ${HISTORY_MODE} mode."
         fi
-    fi
+    }
     
-    # Step 4: Create data directory
+    available_space_check
+    
+    # Step 4: Create data directory and set proper permissions
     if [ -d "$DATA_DIR" ]; then
         print_warning "The directory already exists. This might overwrite existing data."
         read -p "Do you want to continue? (y/N): " continue_choice
@@ -335,14 +371,37 @@ main() {
         print_message "Created data directory."
     fi
     
+    # Set proper permissions for the data directory
+    if ! set_directory_permissions "$DATA_DIR"; then
+        exit 1
+    fi
+    
     # Step 5: Initialize node configuration
     print_step "Node Configuration"
     print_message "Initializing node configuration..."
-    docker run --rm \
-      --volume "$DATA_DIR:/home/tezos/.tezos-node" \
-      tezos/tezos-bare:latest \
-      octez-node config init --network $NETWORK --rpc-addr 0.0.0.0 \
-        --history-mode $HISTORY_MODE
+    
+    # Determine if we should use the current user ID or the default
+    USE_CURRENT_USER=false
+    
+    if [ "$USE_CURRENT_USER" = true ]; then
+        # Option 1: Run Docker as the current user
+        USER_ID=$(id -u)
+        GROUP_ID=$(id -g)
+        
+        docker run --rm \
+          --user $USER_ID:$GROUP_ID \
+          --volume "$DATA_DIR:/home/tezos/.tezos-node" \
+          tezos/tezos-bare:latest \
+          octez-node config init --network $NETWORK --rpc-addr 0.0.0.0 \
+            --history-mode $HISTORY_MODE
+    else
+        # Option 2: Use the default 'tezos' user in the container (with proper permissions set)
+        docker run --rm \
+          --volume "$DATA_DIR:/home/tezos/.tezos-node" \
+          tezos/tezos-bare:latest \
+          octez-node config init --network $NETWORK --rpc-addr 0.0.0.0 \
+            --history-mode $HISTORY_MODE
+    fi
     
     if [ $? -ne 0 ]; then
         print_error "Failed to initialize node configuration. Exiting..."
@@ -398,11 +457,25 @@ main() {
     print_message "Importing snapshot..."
     print_message "This may take some time depending on your hardware..."
     
-    docker run --rm \
-      --volume "$DATA_DIR:/home/tezos/.tezos-node" \
-      --volume "$SNAPSHOT_FILE:/snapshot:ro" \
-      tezos/tezos-bare:latest \
-      octez-node snapshot import /snapshot
+    if [ "$USE_CURRENT_USER" = true ]; then
+        # Option 1: Run Docker as the current user
+        USER_ID=$(id -u)
+        GROUP_ID=$(id -g)
+        
+        docker run --rm \
+          --user $USER_ID:$GROUP_ID \
+          --volume "$DATA_DIR:/home/tezos/.tezos-node" \
+          --volume "$SNAPSHOT_FILE:/snapshot:ro" \
+          tezos/tezos-bare:latest \
+          octez-node snapshot import /snapshot
+    else
+        # Option 2: Use the default 'tezos' user in the container (with proper permissions set)
+        docker run --rm \
+          --volume "$DATA_DIR:/home/tezos/.tezos-node" \
+          --volume "$SNAPSHOT_FILE:/snapshot:ro" \
+          tezos/tezos-bare:latest \
+          octez-node snapshot import /snapshot
+    fi
     
     if [ $? -ne 0 ]; then
         print_error "Failed to import snapshot. Exiting..."
@@ -422,11 +495,25 @@ main() {
     fi
     
     print_message "Starting the node..."
-    docker run --name ${CONTAINER_NAME} -d \
-      --volume "$DATA_DIR:/home/tezos/.tezos-node" \
-      -p 8732:8732 \
-      tezos/tezos-bare:latest \
-      octez-node run --rpc-addr 0.0.0.0:8732
+    if [ "$USE_CURRENT_USER" = true ]; then
+        # Option 1: Run Docker as the current user
+        USER_ID=$(id -u)
+        GROUP_ID=$(id -g)
+        
+        docker run --name ${CONTAINER_NAME} -d \
+          --user $USER_ID:$GROUP_ID \
+          --volume "$DATA_DIR:/home/tezos/.tezos-node" \
+          -p 8732:8732 \
+          tezos/tezos-bare:latest \
+          octez-node run --rpc-addr 0.0.0.0:8732
+    else
+        # Option 2: Use the default 'tezos' user in the container (with proper permissions set)
+        docker run --name ${CONTAINER_NAME} -d \
+          --volume "$DATA_DIR:/home/tezos/.tezos-node" \
+          -p 8732:8732 \
+          tezos/tezos-bare:latest \
+          octez-node run --rpc-addr 0.0.0.0:8732
+    fi
     
     if [ $? -ne 0 ]; then
         print_error "Failed to start the node. Exiting..."
