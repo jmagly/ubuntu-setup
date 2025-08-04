@@ -1,10 +1,37 @@
 # Development Tools
 
-This directory is reserved for development environments and tools, separate from the security toolkit.
+This directory contains development environments and tools, separate from the security toolkit.
 
-## Currently Empty
+## Available Tools
 
-No development tools are included at this time. This directory structure is maintained for future additions.
+### 1. Node.js LTS
+Install Node.js 20.x LTS and npm for JavaScript development.
+```bash
+cd nodejs/
+./install-nodejs.sh
+```
+
+### 2. Claude CLI
+Install the Claude command-line interface for AI assistance.
+```bash
+cd claude-cli/
+./install-claude.sh
+```
+
+## Installation Order
+
+1. **Install Node.js first** (required for Claude CLI)
+2. **Then install Claude CLI**
+
+## Quick Install Both
+
+```bash
+# Install Node.js
+./nodejs/install-nodejs.sh
+
+# Install Claude CLI
+./claude-cli/install-claude.sh
+```
 
 ## Why Separate?
 
@@ -14,10 +41,9 @@ Development tools are kept separate from security tools because:
 - May introduce additional attack surface
 - Not required for security operations
 
-## Adding Development Tools
+## Security Considerations
 
-When adding development tools in the future:
-- Include clear documentation
-- Specify security considerations
-- List all dependencies
-- Provide uninstall instructions
+- Node.js opens network ports if you run servers
+- Keep npm packages updated to avoid vulnerabilities
+- Claude CLI requires API key - store it securely
+- Review package.json files before npm install
