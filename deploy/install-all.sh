@@ -483,6 +483,9 @@ show_summary() {
         echo "Daily security scans will run automatically at 3 AM"
         echo "ClamAV scans will run daily at 2 AM"
         echo "GeoIP databases will update weekly on Sundays"
+        echo
+        echo "Additional Applications:"
+        echo "Need Docker, Tezos, or other apps? Check standalone-apps/"
     fi
     echo "========================================================"
 }

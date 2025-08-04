@@ -1,9 +1,6 @@
-# Optional Package Requirements for Ubuntu Security Toolkit
-# These packages enhance functionality but are not required for core operation
-
-# Web Server (for fail2ban web server jails)
-apache2 # Apache web server [fail2ban jail.local - optional]
-nginx # Nginx web server [fail2ban jail.local - optional]
+# Optional Security Enhancement Packages for Ubuntu Security Toolkit
+# These packages enhance security functionality but are not required for core operation
+# Note: Non-security applications have been moved to standalone-apps/
 
 # Enhanced GeoIP
 geoipupdate # MaxMind GeoIP updater [f2b-geoban - enhancement]
@@ -19,9 +16,9 @@ aide # Advanced Intrusion Detection Environment [monitoring - enhancement]
 tripwire # File integrity checker [monitoring - enhancement]
 ossec-hids # Host-based intrusion detection [monitoring - enhancement]
 
-# Container Tools
-podman # Alternative container runtime [container support]
-buildah # Container image builder [container support]
+# Security-Enhanced Container Tools
+# Note: Docker has been moved to standalone-apps/docker/
+# These are security-focused alternatives
 
 # Log Analysis
 logwatch # Log analysis and reporting [monitoring - enhancement]
@@ -43,3 +40,8 @@ duplicity # Encrypted backup [backup]
 # Additional Entropy Sources
 rng-tools-debian # Debian-specific RNG tools [entropy - conditional]
 # Note: May conflict with haveged, scripts handle this
+
+# Security-Specific Tools Only
+# ===========================
+# Web servers, databases, and application platforms have been
+# moved to standalone-apps/ to maintain security focus

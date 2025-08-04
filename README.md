@@ -1,27 +1,33 @@
 # Ubuntu Security Toolkit
 
-A comprehensive security toolkit for Ubuntu systems (20.04, 22.04, 24.04), supporting both desktop and server environments. This toolkit provides automated installation, configuration, and management of security tools with built-in dependency management and verification.
+**A security-focused hardening and monitoring toolkit for Ubuntu systems (20.04, 22.04, 24.04).**
+
+This toolkit provides automated installation and management of security hardening tools, intrusion detection, antivirus, and system monitoring. It focuses exclusively on defensive security measures and system hardening.
+
+> **Note**: Non-security applications (Docker, Tezos, etc.) have been moved to the `standalone-apps/` directory to maintain the security-focused nature of this toolkit.
 
 ## Project Structure
 
 ```
-common/                  # Shared scripts for both desktop and server
-│   ├── clamav/          # ClamAV related scripts
-│   ├── fail2ban/        # Fail2ban and geoip management
-│   ├── audit/           # Auditd configuration and management
-│   └── monitoring/      # System and container monitoring, entropy, rootkit, and hardening scripts
+common/                  # Security scripts for both desktop and server
+│   ├── clamav/          # Antivirus management
+│   ├── fail2ban/        # Intrusion prevention with GeoIP
+│   ├── monitoring/      # Security scanning and monitoring
+│   └── lib/             # Shared libraries (dependency checking)
 
-desktop/                 # Desktop-specific scripts
-│   └── gnome/           # GNOME-specific security settings and scripts
+deploy/                  # Installation and deployment
+│   ├── requirements/    # Package and service definitions
+│   ├── config/          # Security tool configurations
+│   ├── install-all.sh   # Master installer
+│   └── verify-installation.sh  # Installation verification
 
-server/                  # Server-specific scripts
-
-deploy/                  # Deployment and configuration templates
-│   └── config/          # Example configuration files for auditd, fail2ban, etc.
+standalone-apps/         # Non-security applications (separate)
+│   ├── docker/          # Docker installation
+│   ├── tezos/           # Tezos node installation
+│   └── README.md        # Standalone apps documentation
 
 docs/                    # Documentation
-│   ├── desktop/         # Desktop setup and usage guides
-│   └── server/          # Server setup and usage guides
+tests/                   # Test suites
 ```
 
 ## Directory Guidelines
@@ -42,7 +48,10 @@ docs/                    # Documentation
 - **Entropy Management**: Automatic entropy optimization for containers and hosts
 - **Performance Optimization**: Off-hours scheduling to minimize system impact
 
-### Included Security Tools
+### Security Tools Only
+
+This toolkit includes ONLY security-focused tools:
+
 - **ClamAV**: Open-source antivirus with automated updates
 - **Fail2ban**: Intrusion prevention with geographic IP analysis
 - **RKHunter**: Rootkit detection and system scanning
@@ -51,6 +60,14 @@ docs/                    # Documentation
 - **Auditd**: System call auditing and monitoring
 - **AppArmor**: Mandatory access control framework
 - **UFW**: Uncomplicated firewall management
+- **Entropy Management**: Haveged/rng-tools for cryptographic operations
+- **SSH Hardening**: Automated SSH security configuration
+
+**Not Included** (moved to `standalone-apps/`):
+- Docker
+- Tezos/blockchain nodes  
+- Web servers
+- Development environments
 
 ### Dependency Management
 - Automatic detection of missing packages
@@ -257,13 +274,34 @@ sudo dpkg-reconfigure postfix  # Choose "Local only"
 ./tests/unit/test_monitoring_scripts.sh
 ```
 
-## Security Considerations
+## Security Philosophy
 
-- All scripts require appropriate privileges (typically sudo)
-- Review scripts before execution in production
-- Sensitive operations are logged for audit trails
-- No offensive security capabilities included
-- Designed for defensive security only
+This toolkit adheres to strict security principles:
+
+1. **Defensive Only**: No offensive security tools or exploits
+2. **Minimal Attack Surface**: Only essential security tools included
+3. **Separation of Concerns**: Non-security apps isolated in `standalone-apps/`
+4. **Audit Trail**: All operations logged for accountability
+5. **Least Privilege**: Scripts request only necessary permissions
+
+## Using Non-Security Applications
+
+If you need Docker, Tezos, or other applications:
+
+```bash
+# First: Install security toolkit
+sudo ./deploy/install-all.sh
+
+# Then: Install standalone apps as needed
+cd standalone-apps/docker/
+./install-docker.sh
+
+# Or install Tezos node
+cd standalone-apps/tezos/octez/
+./node-install.sh
+```
+
+See `standalone-apps/README.md` for more information.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details. 

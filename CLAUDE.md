@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Ubuntu Security Toolkit - A comprehensive security toolkit for Ubuntu systems (20.04, 22.04, 24.04) with automated dependency management, installation verification, and modular architecture. The toolkit provides defensive security capabilities only, with clear separation between shared (common), desktop, and server-specific components.
+Ubuntu Security Toolkit - A security-focused hardening and monitoring toolkit for Ubuntu systems (20.04, 22.04, 24.04) with automated dependency management and installation verification. The toolkit provides defensive security capabilities only, focusing exclusively on system hardening, intrusion detection, antivirus, and security monitoring.
+
+**Important**: Non-security applications (Docker, Tezos, web servers) have been moved to `standalone-apps/` directory to maintain the security-focused nature of the toolkit.
 
 ## Architecture
 
@@ -22,8 +24,7 @@ The codebase is organized around security functions with intelligent dependency 
   - Master installer: `install-all.sh`
   - Component installers: `install-security-tools.sh`, etc.
   - Verification: `verify-installation.sh`
-- **servers/**: Server-specific scripts (blockchain/tezos)
-- **apps/**: Application-specific tools including claude-shell
+- **standalone-apps/**: Non-security applications (Docker, Tezos, etc.)
 - **tests/**: Bash-based test suite with assertions
 - **docs/**: Comprehensive documentation
 
@@ -149,14 +150,6 @@ The test suite uses bash-based testing with:
 - Include descriptive function names
 - Add error handling for all external commands
 - Use color output sparingly (RED for errors, GREEN for success, YELLOW for warnings)
-
-## Claude Shell Integration
-
-The `apps/agents/claude-shell/` directory contains a Docker-based environment for running Claude CLI operations in an isolated container. This provides:
-- Sandboxed execution environment
-- Version management
-- Persistence through volume mounts
-- Agent-friendly APIs
 
 ## Security Considerations
 
