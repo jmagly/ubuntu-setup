@@ -59,13 +59,48 @@ case "$1" in
         sudo systemctl status clamav-daemon --no-pager
         ;;
     
+    disable-daemon)
+        echo "=== Disabling ClamAV Daemon ==="
+        
+        if ! check_root; then
+            echo "Run with sudo to disable daemon"
+            exit 1
+        fi
+        
+        echo "Stopping and disabling clamav-daemon..."
+        systemctl stop clamav-daemon 2>/dev/null || true
+        systemctl disable clamav-daemon 2>/dev/null || true
+        echo -e "${GREEN}ClamAV daemon disabled${NC}"
+        ;;
+    
+    help|--help|-h)
+        cat << EOF
+ClamAV Manager - Ubuntu Security Toolkit
+
+Usage: $0 <command> [options]
+
+Commands:
+    update          Update virus definitions
+    status          Show ClamAV status and database info
+    scan <path>     Scan specified path for viruses
+    enable-daemon   Enable real-time scanning daemon
+    disable-daemon  Disable real-time scanning daemon
+    help            Show this help message
+
+Examples:
+    $0 update                    # Update virus definitions
+    $0 status                    # Check ClamAV status
+    $0 scan /home               # Scan /home directory
+    $0 scan / --exclude=/mnt    # Scan root, exclude /mnt
+    
+For more options, see: man clamscan
+EOF
+        ;;
+    
     *)
-        echo "ClamAV Manager"
-        echo "Usage: $0 {update|status|scan <path>|enable-daemon}"
-        echo ""
-        echo "  update       - Force database update"
-        echo "  status       - Show ClamAV status"
-        echo "  scan <path>  - Scan specified path"
-        echo "  enable-daemon - Enable ClamAV daemon for faster scanning"
+        echo "Error: Unknown command '${1:-}'"
+        echo "Usage: $0 {update|status|scan <path>|enable-daemon|disable-daemon|help}"
+        echo "Run '$0 help' for more information"
+        exit 1
         ;;
 esac

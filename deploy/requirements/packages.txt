@@ -1,0 +1,56 @@
+# Core System Requirements for Ubuntu Security Toolkit
+# Format: package-name # Description [Component that uses it]
+
+# Base System Tools (Already in initial-setup.sh)
+apt-transport-https # Package transport over HTTPS [initial-setup]
+ca-certificates # SSL certificate authorities [initial-setup]
+curl # URL transfer tool [initial-setup, docker]
+gnupg # GNU Privacy Guard [initial-setup, docker]
+lsb-release # LSB release info [initial-setup, docker]
+software-properties-common # Software repository management [initial-setup]
+git # Version control [initial-setup]
+vim # Text editor [initial-setup]
+htop # Process viewer [initial-setup]
+net-tools # Network utilities [initial-setup]
+
+# Security - Core
+ufw # Uncomplicated Firewall [initial-setup]
+fail2ban # Intrusion prevention [initial-setup]
+auditd # System audit daemon [initial-setup]
+apparmor # Application armor [initial-setup]
+apparmor-utils # AppArmor utilities [initial-setup]
+
+# Security - Antivirus
+clamav # Antivirus engine [clamav scripts]
+clamav-daemon # ClamAV daemon [clamav scripts]
+clamav-freshclam # Virus definition updater [clamav scripts]
+
+# Security - Scanning & Monitoring
+rkhunter # Rootkit scanner [monitoring scripts]
+chkrootkit # Alternative rootkit scanner [monitoring scripts]
+lynis # Security auditing tool [monitoring scripts]
+
+# System Tools - Entropy
+haveged # Entropy daemon [monitoring scripts]
+rng-tools # Random number generator tools [monitoring scripts]
+
+# System Tools - Mail
+mailutils # Mail utilities for reports [daily-security-scan]
+# Alternative: postfix # Mail server [daily-security-scan]
+
+# Network Analysis
+lsof # List open files [monitoring scripts]
+ss # Socket statistics (part of iproute2, usually pre-installed)
+
+# Fail2ban GeoIP Support
+geoip-bin # GeoIP lookup binary [f2b-geoban]
+geoip-database # GeoIP database [f2b-geoban]
+geoip-database-extra # Additional GeoIP data [f2b-geoban]
+jq # JSON processor [f2b-geoban]
+
+# Docker (Separate installer exists)
+# docker-ce # Docker Community Edition [docker/install-docker.sh]
+# docker-ce-cli # Docker CLI [docker/install-docker.sh]
+# containerd.io # Container runtime [docker/install-docker.sh]
+# docker-buildx-plugin # Docker buildx [docker/install-docker.sh]
+# docker-compose-plugin # Docker compose [docker/install-docker.sh]

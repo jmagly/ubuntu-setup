@@ -1,0 +1,45 @@
+# Optional Package Requirements for Ubuntu Security Toolkit
+# These packages enhance functionality but are not required for core operation
+
+# Web Server (for fail2ban web server jails)
+apache2 # Apache web server [fail2ban jail.local - optional]
+nginx # Nginx web server [fail2ban jail.local - optional]
+
+# Enhanced GeoIP
+geoipupdate # MaxMind GeoIP updater [f2b-geoban - enhancement]
+mmdb-bin # MaxMind DB reader [f2b-geoban - enhancement]
+
+# Enhanced Monitoring
+iotop # I/O monitoring [monitoring - enhancement]
+iftop # Network bandwidth monitoring [monitoring - enhancement]
+ncdu # Disk usage analyzer [monitoring - enhancement]
+
+# Enhanced Security
+aide # Advanced Intrusion Detection Environment [monitoring - enhancement]
+tripwire # File integrity checker [monitoring - enhancement]
+ossec-hids # Host-based intrusion detection [monitoring - enhancement]
+
+# Container Tools
+podman # Alternative container runtime [container support]
+buildah # Container image builder [container support]
+
+# Log Analysis
+logwatch # Log analysis and reporting [monitoring - enhancement]
+logrotate # Log rotation (usually pre-installed) [system maintenance]
+
+# Performance Monitoring
+sysstat # System performance tools [monitoring - enhancement]
+dstat # Versatile resource statistics [monitoring - enhancement]
+
+# Network Security
+nmap # Network exploration tool [network analysis]
+tcpdump # Network packet analyzer [network analysis]
+wireshark-cli # Network protocol analyzer CLI [network analysis]
+
+# Backup Tools
+rsync # Remote file sync (usually pre-installed) [backup]
+duplicity # Encrypted backup [backup]
+
+# Additional Entropy Sources
+rng-tools-debian # Debian-specific RNG tools [entropy - conditional]
+# Note: May conflict with haveged, scripts handle this

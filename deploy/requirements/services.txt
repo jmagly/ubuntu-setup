@@ -1,0 +1,45 @@
+# Required System Services for Ubuntu Security Toolkit
+# Format: service-name # Description [Status: enabled/disabled/conditional]
+
+# Core Security Services
+ufw # Uncomplicated Firewall [Status: enabled]
+fail2ban # Intrusion prevention system [Status: enabled]
+auditd # System audit daemon [Status: enabled]
+apparmor # Application confinement [Status: enabled]
+
+# SSH Service
+ssh # OpenSSH server [Status: enabled]
+sshd # SSH daemon (alias) [Status: enabled]
+
+# Antivirus Services
+clamav-daemon # ClamAV scanning daemon [Status: conditional - based on user choice]
+clamav-freshclam # ClamAV definition updater [Status: enabled]
+
+# Entropy Services (mutually exclusive)
+haveged # Hardware entropy daemon [Status: conditional - if not in container]
+rng-tools # RNG tools daemon [Status: conditional - if in container]
+
+# Mail Services (one required for reports)
+postfix # Mail transfer agent [Status: conditional - if installed]
+exim4 # Alternative MTA [Status: conditional - if installed]
+sendmail # Alternative MTA [Status: conditional - if installed]
+
+# Optional Services
+apache2 # Web server [Status: disabled - enable if needed]
+nginx # Web server [Status: disabled - enable if needed]
+docker # Container runtime [Status: conditional - if installed]
+
+# System Services (usually pre-enabled)
+systemd-timesyncd # Time synchronization [Status: enabled]
+systemd-resolved # DNS resolver [Status: enabled]
+cron # Task scheduler [Status: enabled]
+rsyslog # System logging [Status: enabled]
+
+# Monitoring Services
+lynis # Security auditing (not a service, runs via cron) [Status: N/A]
+rkhunter # Rootkit hunter (not a service, runs via cron) [Status: N/A]
+
+# Notes:
+# - Services marked 'conditional' are enabled based on installation choices
+# - Some tools (lynis, rkhunter) run as scheduled tasks, not persistent services
+# - Container environments may have different service requirements
