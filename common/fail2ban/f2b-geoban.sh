@@ -126,25 +126,58 @@ check_dependencies() {
     fi
 }
 
-# Function to get geolocation info
+# Function to get geolocation info with better error handling
 get_geo_info() {
     local ip=$1
     local country="Unknown"
     local city=""
     
-    # Try different methods to get geo info
+    # Check if geoiplookup is available
     if command -v geoiplookup &> /dev/null; then
-        country=$(geoiplookup "$ip" 2>/dev/null | head -1 | sed -e 's/GeoIP Country Edition: //' -e 's/, /:/g' | cut -d: -f2- || echo "Unknown")
+        # Try to get country info
+        local geo_output=$(geoiplookup "$ip" 2>&1)
+        
+        # Check if database exists and lookup succeeded
+        if [[ ! "$geo_output" =~ "Can't open" ]] && [[ ! "$geo_output" =~ "not found" ]]; then
+            # Extract country from various possible formats
+            if [[ "$geo_output" =~ "GeoIP Country Edition:" ]]; then
+                country=$(echo "$geo_output" | sed 's/GeoIP Country Edition: //' | cut -d',' -f2 | sed 's/^ *//')
+            else
+                # Handle other formats
+                country=$(echo "$geo_output" | grep -v "^$" | head -1)
+            fi
+        fi
         
         # Try city database if available
         if [ -f /usr/share/GeoIP/GeoIPCity.dat ]; then
-            city=$(geoiplookup -f /usr/share/GeoIP/GeoIPCity.dat "$ip" 2>/dev/null | grep -oP 'City Edition:.*' | sed 's/City Edition: //' || echo "")
+            local city_output=$(geoiplookup -f /usr/share/GeoIP/GeoIPCity.dat "$ip" 2>&1)
+            if [[ ! "$city_output" =~ "Can't open" ]] && [[ ! "$city_output" =~ "not found" ]]; then
+                city=$(echo "$city_output" | grep -oP '(?<=, )[^,]+(?=, [^,]+, [A-Z]{2})' | head -1 || echo "")
+            fi
         fi
     fi
     
-    # Clean up output
-    country=$(echo "$country" | sed -e 's/IP Address not found/Unknown/' -e 's/^\s*//' -e 's/\s*$//')
-    [ -z "$country" ] && country="Unknown"
+    # Clean up and validate output
+    country=$(echo "$country" | tr -d '\n' | sed -e 's/IP Address not found/Unknown/' -e 's/^\s*//' -e 's/\s*$//')
+    
+    # If country is empty or just whitespace, set to Unknown
+    if [ -z "$(echo "$country" | tr -d '[:space:]')" ]; then
+        country="Unknown"
+    fi
+    
+    # Handle common country codes
+    case "$country" in
+        "US") country="United States" ;;
+        "CN") country="China" ;;
+        "RU") country="Russia" ;;
+        "GB") country="United Kingdom" ;;
+        "DE") country="Germany" ;;
+        "FR") country="France" ;;
+        "JP") country="Japan" ;;
+        "KR") country="South Korea" ;;
+        "IN") country="India" ;;
+        "BR") country="Brazil" ;;
+    esac
     
     echo "${country}|${city}"
 }
@@ -361,7 +394,11 @@ output_json() {
 # Main execution
 main() {
     # Check dependencies
-    check_dependencies
+    if ! check_dependencies; then
+        echo -e "${RED}Error: Failed to install required dependencies${NC}"
+        echo -e "${YELLOW}The script will continue but GeoIP lookups may not work${NC}"
+        echo
+    fi
     
     # Check if fail2ban is installed
     if ! command -v fail2ban-client &> /dev/null; then
