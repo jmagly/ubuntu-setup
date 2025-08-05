@@ -1,0 +1,102 @@
+# GeoIP Country Blocking Configuration
+# 
+# This file contains country codes to block using IPdeny zone files.
+# Each line should contain a two-letter country code (ISO 3166-1 alpha-2).
+# Lines starting with # are comments.
+#
+# To use this configuration:
+# 1. Copy this file to geoip-countries.conf
+# 2. Uncomment or add country codes you wish to block
+# 3. Run: sudo /path/to/update-geoip-simple.sh
+#
+# To find country codes causing issues on your server:
+# - Check fail2ban logs: sudo fail2ban-client status
+# - Analyze auth logs: sudo grep "Failed password" /var/log/auth.log
+# - Use the analyze script: sudo ./analyze-attacks.sh
+#
+# Common country codes (uncomment as needed):
+# af  # Afghanistan
+# al  # Albania
+# dz  # Algeria
+# ao  # Angola
+# ar  # Argentina
+# am  # Armenia
+# au  # Australia
+# at  # Austria
+# az  # Azerbaijan
+# bd  # Bangladesh
+# by  # Belarus
+# be  # Belgium
+# br  # Brazil
+# bg  # Bulgaria
+# kh  # Cambodia
+# ca  # Canada
+# cn  # China
+# co  # Colombia
+# hr  # Croatia
+# cz  # Czech Republic
+# dk  # Denmark
+# eg  # Egypt
+# ee  # Estonia
+# et  # Ethiopia
+# fi  # Finland
+# fr  # France
+# ge  # Georgia
+# de  # Germany
+# gh  # Ghana
+# gr  # Greece
+# hk  # Hong Kong
+# hu  # Hungary
+# in  # India
+# id  # Indonesia
+# ir  # Iran
+# iq  # Iraq
+# ie  # Ireland
+# il  # Israel
+# it  # Italy
+# jp  # Japan
+# kz  # Kazakhstan
+# ke  # Kenya
+# kp  # North Korea
+# kr  # South Korea
+# lv  # Latvia
+# lt  # Lithuania
+# my  # Malaysia
+# mx  # Mexico
+# md  # Moldova
+# mn  # Mongolia
+# ma  # Morocco
+# nl  # Netherlands
+# nz  # New Zealand
+# ng  # Nigeria
+# no  # Norway
+# pk  # Pakistan
+# pe  # Peru
+# ph  # Philippines
+# pl  # Poland
+# pt  # Portugal
+# ro  # Romania
+# ru  # Russia
+# sa  # Saudi Arabia
+# rs  # Serbia
+# sg  # Singapore
+# sk  # Slovakia
+# si  # Slovenia
+# za  # South Africa
+# es  # Spain
+# se  # Sweden
+# ch  # Switzerland
+# sy  # Syria
+# tw  # Taiwan
+# th  # Thailand
+# tr  # Turkey
+# ua  # Ukraine
+# ae  # United Arab Emirates
+# gb  # United Kingdom
+# us  # United States
+# uz  # Uzbekistan
+# ve  # Venezuela
+# vn  # Vietnam
+# ye  # Yemen
+
+# Add your country codes below (one per line):

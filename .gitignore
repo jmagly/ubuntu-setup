@@ -1,0 +1,103 @@
+# Git ignore file for Ubuntu Security Toolkit
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Log files
+*.log
+logs/
+/var/log/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+tmp/
+temp/
+
+# Personal configuration files - DO NOT COMMIT
+common/fail2ban/geoip-countries.conf
+config/personal/
+*-personal.conf
+*-local.conf
+
+# SSH keys and certificates
+*.key
+*.pem
+*.pub
+id_rsa*
+id_ed25519*
+authorized_keys
+
+# Tripwire keys - NEVER commit these
+*.twd
+site.key
+*-local.key
+
+# Test outputs
+test-results/
+*.test
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.env
+
+# Backup files
+backup/
+*.sql
+*.dump
+
+# System files
+.directory
+Thumbs.db
+
+# Security sensitive files
+passwords.txt
+secrets.conf
+credentials.json
+.env*
+
+# Local overrides
+local/
+override/
+
+# Build artifacts
+build/
+dist/
+*.tar.gz
+*.zip
+
+# Documentation builds
+docs/_build/
+docs/.doctrees/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.directory
+.Trash-*

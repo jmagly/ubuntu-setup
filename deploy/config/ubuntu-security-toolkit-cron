@@ -1,0 +1,60 @@
+# Ubuntu Security Toolkit - Scheduled Security Tasks
+# This file sets up automated security scans and updates
+# Place in /etc/cron.d/ubuntu-security-toolkit
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# === Daily Security Scans ===
+# Run comprehensive security scan at 3:00 AM daily
+0 3 * * * root /home/roctinam/ubuntu-setup/common/monitoring/daily-security-scan.sh >> /var/log/ubuntu-security-toolkit/daily-scan.log 2>&1
+
+# === ClamAV Scans ===
+# Quick scan of critical directories at 1:00 AM daily
+0 1 * * * root /home/roctinam/ubuntu-setup/common/clamav/clamav-daily-scan.sh >> /var/log/ubuntu-security-toolkit/clamav-scan.log 2>&1
+
+# Full system scan every Sunday at 2:00 AM
+0 2 * * 0 root clamscan -r / --exclude-dir="^/sys|^/proc|^/dev" --quiet --infected >> /var/log/ubuntu-security-toolkit/clamav-full.log 2>&1
+
+# === GeoIP Updates ===
+# Update IPdeny zone files weekly (Sunday at 2:30 AM) - only if configured
+30 2 * * 0 root [ -f /home/roctinam/ubuntu-setup/common/fail2ban/geoip-countries.conf ] && /home/roctinam/ubuntu-setup/common/fail2ban/update-geoip-simple.sh >> /var/log/ubuntu-security-toolkit/geoip-update.log 2>&1
+
+# Update legacy GeoIP databases if geoipupdate is available (Sunday at 2:45 AM)
+45 2 * * 0 root [ -x /usr/bin/geoipupdate ] && /usr/bin/geoipupdate >> /var/log/ubuntu-security-toolkit/geoip-update.log 2>&1 || true
+
+# === RKHunter Updates ===
+# Update RKHunter database weekly (Saturday at 2:00 AM)
+0 2 * * 6 root [ -x /usr/bin/rkhunter ] && /usr/bin/rkhunter --update --nocolors >> /var/log/ubuntu-security-toolkit/rkhunter-update.log 2>&1
+
+# === Lynis Audit ===
+# Run Lynis audit weekly (Monday at 3:00 AM)
+0 3 * * 1 root [ -x /usr/bin/lynis ] && /usr/bin/lynis audit system --quiet --no-colors >> /var/log/ubuntu-security-toolkit/lynis-audit.log 2>&1
+
+# === Fail2ban Status Check ===
+# Check fail2ban status and banned IPs daily at 4:00 AM
+0 4 * * * root /home/roctinam/ubuntu-setup/common/fail2ban/f2b-geoban.sh -a >> /var/log/ubuntu-security-toolkit/fail2ban-status.log 2>&1
+
+# === Log Rotation Check ===
+# Ensure logs don't grow too large - rotate weekly
+0 0 * * 0 root find /var/log/ubuntu-security-toolkit -name "*.log" -size +100M -exec gzip {} \; -exec mv {}.gz {}.$(date +\%Y\%m\%d).gz \;
+
+# === System Updates Security Check ===
+# Check for security updates daily at 6:00 AM (does not auto-install)
+0 6 * * * root /usr/bin/apt-get update -qq && /usr/bin/apt-get upgrade -s | grep -i security >> /var/log/ubuntu-security-toolkit/security-updates.log 2>&1
+
+# === Tripwire Check (if installed) ===
+# Run Tripwire integrity check daily at 4:30 AM
+30 4 * * * root [ -x /usr/sbin/tripwire ] && /usr/sbin/tripwire --check --quiet >> /var/log/ubuntu-security-toolkit/tripwire-check.log 2>&1
+
+# === AIDE Check (if installed) ===
+# Run AIDE integrity check daily at 4:45 AM
+45 4 * * * root [ -x /usr/bin/aide ] && /usr/bin/aide --check >> /var/log/ubuntu-security-toolkit/aide-check.log 2>&1
+
+# === Disk Space Monitor ===
+# Check disk space for security logs daily at 5:00 AM
+0 5 * * * root df -h /var/log | awk 'NR==2 {if (int($5) > 80) print "WARNING: Log partition is " $5 " full"}' >> /var/log/ubuntu-security-toolkit/disk-space.log 2>&1
+
+# === Monthly Report Generation ===
+# Generate monthly security summary on the 1st at 7:00 AM
+0 7 1 * * root /home/roctinam/ubuntu-setup/common/monitoring/generate-monthly-report.sh >> /var/log/ubuntu-security-toolkit/monthly-report.log 2>&1

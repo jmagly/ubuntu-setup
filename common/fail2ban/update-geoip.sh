@@ -1,12 +1,17 @@
 #!/bin/bash
 
+# update-geoip.sh - Update GeoIP databases from various sources
+# This script updates both legacy GeoIP and IPdeny zone files
+
+set -euo pipefail
+
 # Dynamic script directory resolution
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Use relative paths for script invocations
-"$SCRIPT_DIR/f2b-geoban.sh"
+# Don't call f2b-geoban.sh here to avoid recursion
+# Just update the databases
 
-# Update GeoIP databases
+echo "=== GeoIP Database Update ==="
 echo "Updating GeoIP databases..."
 
 # Update package databases
